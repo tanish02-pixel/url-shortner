@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>URL Shortener</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      color: #ffffff;
+      background: black;
+      background-size: 400% 400%;
+      animation: gradientBG 20s ease infinite;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    h1, h2 {
+      color: #ff1744;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 800;
+      text-shadow: 0 0 12px #ff1744;
+    }
+
+  form {
+  margin: 40px auto;
+  background: rgba(17, 17, 17, 0.75);
+  backdrop-filter: blur(10px);
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 30px #ff174455, 0 0 60px #ff174422;
+  max-width: 500px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+form:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 40px #ff174466, 0 0 80px #ff174422;
+}
+
+form input {
+  padding: 14px 16px;
+  width: 100%;
+  border: 2px solid #ff1744;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  background: black;
+  color: #ffffff;
+  box-shadow: 0 0 12px #ff174422 inset;
+  transition: 0.3s ease;
+}
+
+form input:focus {
+  outline: none;
+  border-color: #ff4d6d;
+  box-shadow: 0 0 14px #ff1744, 0 0 18px #ff1744 inset;
+}
+
+form button {
+  padding: 12px 35px;
+  margin: 0 auto;
+  background: #ff1744;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px -5px #ff1744;
+}
+
+form button:hover {
+  background: #ff4d6d;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px #ff4d6d;
+}
+
+form {
+  animation: pulseShadow 4s infinite alternate ease-in-out;
+}
+
+@keyframes pulseShadow {
+  0% { box-shadow: 0 0 30px #ff174455; }
+  100% { box-shadow: 0 0 60px #ff1744aa; }
+}
+
+
+
+    ul {
+      list-style: none;
+      padding: 0;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    ul li {
+      background: rgba(17, 17, 17, 0.6);
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 25px rgba(255, 23, 68, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    ul li:hover {
+      transform: scale(1.015);
+      box-shadow: 0 0 35px rgba(255, 23, 68, 0.4);
+    }
+
+    ul a {
+      color: #ff1744;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    ul a:hover {
+      color: #ff4d6d;
+    }
+
+    .entry-row div {
+      margin: 6px 0;
+    }
+
+    .bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      background: #ff1744;
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.3s ease;
+    }
+
+    .copy-btn:hover {
+      background: #ff4d6d;
+    }
+  </style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<h1><i class="fa-solid fa-link"></i> Shorten a URL</h1>
+
+<form id="url-form">
+  <input name="url" id="url" placeholder="Enter your URL" required>
+  <button type="submit"><i class="fa-solid fa-scissors"></i> Shorten</button>
+</form>
+
+<h2><i class="fa-solid fa-bolt"></i> Shortened URL</h2>
+<div id="result" style="text-align:center; margin-bottom: 30px;"></div>
+
+<h2><i class="fa-solid fa-list"></i> All URLs</h2>
+<ul id="url-list">
+  <% urls.slice().reverse().forEach(function(url) { %>
+    <li>
+      <div class="entry-row">
+        <div><strong>Short:</strong> <a href="/<%= url.shortId %>" target="_blank"><%= url.shortId %></a></div>
+        <div><strong>Original:</strong> <%= url.redirectURL %></div>
+        <div class="bottom-row">
+          <span><strong>Clicks:</strong> <%= url.clicks %></span>
+          <button class="copy-btn" onclick="copyToClipboard('<%= url.shortId %>')">📋 Copy</button>
+        </div>
+      </div>
+    </li>
+  <% }); %>
+</ul>
+
+<script>
+document.getElementById('url-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const url = document.getElementById('url').value.trim();
+  if (!url) return;
+
+  const res = await fetch('/url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url })
+  });
+
+  const data = await res.json();
+  const shortId = data.shortURL;
+
+  document.getElementById('result').innerHTML = `
+    Short: <a href="/${shortId}" target="_blank">${shortId}</a><br>
+    Clicks: ${data.clicks}
+  `;
+
+  const newLi = document.createElement('li');
+  newLi.innerHTML = `
+    <div class="entry-row">
+      <div><strong>Short:</strong> <a href="/${shortId}" target="_blank">${shortId}</a></div>
+      <div><strong>Original:</strong> ${url}</div>
+      <div class="bottom-row">
+        <span><strong>Clicks:</strong> ${data.clicks}</span>
+        <button class="copy-btn" onclick="copyToClipboard('${shortId}')">📋 Copy</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('url-list').prepend(newLi);
+});
+
+function copyToClipboard(text) {
+  const fullUrl = `${window.location.origin}/${text}`;
+  navigator.clipboard.writeText(fullUrl).then(() => {
+    alert(`Copied: ${fullUrl}`);
+  });
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+particlesJS("particles-js", {
+  particles: {
+    number: { value: 80 },
+    color: { value: "#ff1744" },
+    size: { value: 2 },
+    line_linked: { enable: true, color: "#ff1744" },
+    move: { speed: 1 }
+  }
+});
+</script>
+
+</body>
+</html>
